@@ -2,13 +2,17 @@ import unittest
 import mysql.connector
 from mysql.connector import errorcode
 from utils.query_generator import QueryGenerator as query
-from utils.config import get_value_from_json_env_var, generate_random_db_name
+from utils.config import generate_random_db_name, get_value_from_json_env_var
 from utils.log import setup_logger
 from utils.instatus import InstatusClient as ins
 from utils.template import IncidentTemplate as template
 
 
-class MyTestCase(unittest.TestCase):
+class TestSlackConnection(unittest.TestCase):
+    """
+    Test class for testing the Slack datasource using the MindsDB SQL API.
+    """
+
     def setUp(self):
         """
         Set up the test environment by establishing a connection
@@ -19,7 +23,7 @@ class MyTestCase(unittest.TestCase):
         self.query_generator = query()
         self.logger = setup_logger(__name__)
         try:
-            config = get_value_from_json_env_var("INTEGRATIONS_CONFIG", "mindsdb_cloud")
+            config = get_value_from_json_env_var('INTEGRATIONS_CONFIG', 'mindsdb_cloud')
             self.connection = mysql.connector.connect(**config)
         except mysql.connector.Error as err:
             cloud_temp = self.template.get_cloud_sql_api_template()
@@ -40,7 +44,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_connection_established(self):
         """
-        Test that the connection to the MindsDB SQL API is established
+        Test that the connection to the MindsDB SQL API is established.
         """
         if not self.connection.is_connected():
             cloud_temp = self.template.get_cloud_sql_api_template()
@@ -48,23 +52,23 @@ class MyTestCase(unittest.TestCase):
 
     def test_execute_query(self):
         """
-        Create new MySQL Datasource
+        Create a new Slack Datasource.
         """
         try:
             cursor = self.connection.cursor()
-            random_db_name = generate_random_db_name("supabase_datasource")
-            supabase_config = get_value_from_json_env_var("INTEGRATIONS_CONFIG", 'supabase')
+            random_db_name = generate_random_db_name("slack_datasource")
+            slack_config = get_value_from_json_env_var("INTEGRATIONS_CONFIG", 'slack')
             query = self.query_generator.create_database_query(
-                random_db_name,
-                "supabase",
-                supabase_config
-            )
+                        random_db_name,
+                        "slack",
+                        slack_config
+                    )
             cursor.execute(query)
             cursor.close()
         except Exception as err:
-            cloud_temp = self.template.get_integration_template("Supabase", "cllnmxa2s13782bdn3417radci")
+            cloud_temp = self.template.get_integration_template("Slack", "cllkx66gh12008ban8cc5c3320")
             self.incident.report_incident("cl8nll9f7106187olof1m17eg17", cloud_temp)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
